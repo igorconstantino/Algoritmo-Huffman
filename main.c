@@ -81,6 +81,7 @@ void montarLista(int frequencia[], Lista *lista){
         inserirLista(lista, novo); // Inserindo o elemento na lista
       }else{
         printf("Erro ao alocar memória para montar a lista");
+        break;
       }
     }
   }
@@ -97,7 +98,54 @@ void mostrarLista(Lista *lista){
   }
 }
 
+// Função para remover o nó do início
+No* removerNo(Lista *lista){
+  No *aux = NULL;
 
+  if(lista->inicio != NULL){
+    aux = lista->inicio;
+    lista->inicio = aux->prox; // Novo início da lista
+    aux->prox = NULL; 
+    lista->tam--;
+  } 
+  return aux; // Retornando o nó removido
+}
+
+// Função que constrói a árvore codificadora ótima
+No* construirArvore(Lista *lista){
+  No *primeiro, *segundo, *noCriado;
+  
+  while(lista->tam > 1){
+    primeiro = removerNo(lista);
+    segundo = removerNo(lista);
+    noCriado = malloc(sizeof(No));
+
+    // Atribuindo os valores ao nó criado
+    if(noCriado != NULL){
+      noCriado->caracter = '*';
+      noCriado->frequencia = primeiro->frequencia + segundo->frequencia;
+      noCriado->esq = primeiro;
+      noCriado->dir = segundo;
+      noCriado->prox = NULL;
+
+      inserirLista(lista, noCriado); // Inserindo o nó criado na lista
+    }else{
+      printf("Erro ao alocar memória para criar nó da árvore");
+      break;
+    }
+  }
+  return lista->inicio; // Retornando a raiz da árvore codificadora ótima
+}
+
+// Função que mostra a árvore
+void mostrarArvore(No *raiz, int altura){
+  if(raiz->esq == NULL && raiz->dir == NULL)
+    printf("\nCaracter: %c Altura: %d", raiz->caracter, altura);
+  else{
+    mostrarArvore(raiz->esq, altura + 1);
+    mostrarArvore(raiz->dir, altura + 1);
+  }
+}
 
 // Função Principal --------------------------------------------------------------------------  
 int main(){
@@ -106,43 +154,25 @@ int main(){
   setlocale(LC_ALL, "Portuguese");
 
   Lista lista;
+  No *arvore;
   int frequencia[TAM_ASCII];
-  unsigned char string[] = "bom esse bombom";
+  unsigned char string[] = "Vamos aprender a programa";
 
-  inicializarLista(&lista);
   zerarTabela(frequencia);
+  inicializarLista(&lista);
+  
   calcularFrequencia(string, frequencia);
   montarLista(frequencia, &lista);
   mostrarLista(&lista);
 
+  arvore = construirArvore(&lista);  
+  printf("\n\tÁrvore de Huffman:");
+  mostrarArvore(arvore, 0);
+
+  
   
   return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
