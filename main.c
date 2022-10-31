@@ -18,6 +18,7 @@ typedef struct lista{
   No *inicio;
 }Lista;
 
+
 // Funções -----------------------------------------------------------------------------------
 
 // Função que zera todos os elementos da tabela de frequência
@@ -93,7 +94,7 @@ void mostrarLista(Lista *lista){
 
   printf("\n\tLista ordenada: \n");
   while(aux != NULL){
-    printf("Caracter: %c Frequência: %d\n", aux->caracter, aux->frequencia);
+    printf("Caracter: %c Frequencia: %d\n", aux->caracter, aux->frequencia);
     aux = aux->prox;
   }
 }
@@ -147,6 +148,94 @@ void mostrarArvore(No *raiz, int altura){
   }
 }
 
+//Função que calcula a altura da árvore
+int alturaArvore(No * raiz){
+  int dir, esq;
+  
+  if(raiz == NULL)
+    return -1;
+  else{
+    esq = alturaArvore(raiz->esq) + 1; 
+    dir = alturaArvore(raiz->dir) + 1;
+
+    // Retornando o maior lado da árvore
+    if(esq > dir)
+      return esq;
+    else
+      return dir;
+  }  
+}
+
+// Função para alocar espaço para dicionário
+char** alocarDicionario(int colunas){
+  char **dicionario; // Ponteiros duplos pois são alocações para matrizes
+
+  dicionario = malloc(sizeof(char*) * TAM_ASCII); // Cada ponteiro de ponteiro contém um ponteiro para char / 256 linhas
+
+  for (int i = 0; i < TAM_ASCII; i++)
+    dicionario[i] = calloc(colunas, sizeof(char)); // Alocando memória para cada caracter "colunas" vezes
+  
+  return dicionario; // Retornando o espaço alocado para a matriz
+}
+
+// Função para gerar o dicionário
+void preencherDicionario(char **dicionario, No *raiz, char *percorrido, int colunas){
+  char esq[colunas], dir[colunas]; 
+  
+  if(raiz->esq == NULL && raiz->dir == NULL) // Verificando nó folha
+    strcpy(dicionario[raiz->caracter], percorrido); // Copiando o caminho na matriz dicionário, no caractere desse nó
+  else{
+    // Copiando o que já existe no caminho para cada "lado" da árvore
+    strcpy(esq, percorrido);
+    strcpy(dir, percorrido);
+    // Adicionando 0 se for pela esquerda e 1 se for pela direita
+    strcat(esq, "0");
+    strcat(dir, "1");
+    // Percorrendo a árvore para esquerda e direita
+    preencherDicionario(dicionario, raiz->esq, esq, colunas);
+    preencherDicionario(dicionario, raiz->dir, dir, colunas);
+  }  
+}
+
+// Funcão para msotrar o dicionário
+void mostrarDicionario(char **dicionario){
+  printf("\n\n\tDicionario: \n");
+
+  for (int i = 0; i < TAM_ASCII; i++){
+    if(strlen(dicionario[i]) > 0)
+      printf("\t%3d: %s\n", i, dicionario[i]);
+  }  
+} 
+
+// Função que calcula o tamanho da string para podermos codificar
+int tamanhoString(char **dicionario, unsigned char *string){
+  int i = 0, tam = 0;
+
+  // Incrementando o tamanho até chegar no final da string
+  while(string[i] != '\0'){
+    tam += strlen(dicionario[string[i]]); // String[i] é o caractere do dicionário
+    i++;
+  }
+  
+  return tam + 1; // Tamanho da string mais \0
+}
+ 
+// Função que codifica o texto
+char* codificar(char **dicionario, unsigned char *string){
+  int i = 0, tamStr = tamanhoString(dicionario, string);
+  
+  char* codigo = calloc(tamStr, sizeof(char)); // Alocando espaço para "tamStr" vezes, o espaço de um caracter
+
+  // Percorrendo a string e concatenando o conteúdo do dicionário no texto codificado
+  while(string[i] != '\0'){
+    strcat(codigo, dicionario[string[i]]);
+    i++;
+  }
+
+  return codigo; // Retorna o texto codificado
+}
+
+
 // Função Principal --------------------------------------------------------------------------  
 int main(){
   
@@ -156,20 +245,35 @@ int main(){
   Lista lista;
   No *arvore;
   int frequencia[TAM_ASCII];
-  unsigned char string[] = "Vamos aprender a programa";
+  int colunas;
+  char **dicionario;
+  char *codificado;
+  unsigned char string[] = "Vamos aprender programação";
 
+  // Tabela de frequência
   zerarTabela(frequencia);
-  inicializarLista(&lista);
-  
   calcularFrequencia(string, frequencia);
+  
+  // Lista ordenada
+  inicializarLista(&lista);
   montarLista(frequencia, &lista);
   mostrarLista(&lista);
 
+  // Árvore de Huffman
   arvore = construirArvore(&lista);  
-  printf("\n\tÁrvore de Huffman:");
+  printf("\n\tArvore de Huffman:");
   mostrarArvore(arvore, 0);
 
-  
+  // Dicionário
+  colunas = alturaArvore(arvore) + 1;
+  dicionario = alocarDicionario(colunas);
+  preencherDicionario(dicionario, arvore, "", colunas);
+  mostrarDicionario(dicionario);
+
+  // Codificação
+  codificado = codificar(dicionario, string);
+  printf("\n\tString codificada: %s\n", codificado);
+
   
   return 0;
 }
