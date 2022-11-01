@@ -235,6 +235,32 @@ char* codificar(char **dicionario, unsigned char *string){
   return codigo; // Retorna o texto codificado
 }
 
+// Função para decodificar o texto
+char* decodificar(unsigned char string[], No *raiz){
+  int i = 0;
+  No *aux = raiz;
+  char temp[2];
+  char *decodificado = calloc(strlen(string), sizeof(char));
+
+  // Percorrendo a string e caminhando na árvore conforme os 0's e 1's
+  while(string[i] != '\0'){
+    if(string[i] == '0')
+      aux = aux->esq;
+    else
+      aux = aux->dir;
+
+    // Se nó folha, concatenar os 0's e 1's lidos ao texto decodificado
+    if(aux->esq == NULL && aux->dir == NULL){
+      temp[0] = aux->caracter;
+      temp[1] = '\0';
+      strcat(decodificado, temp);
+      aux = raiz; // Aux começa na raiz de novo
+    }
+    i++;
+  }
+  return decodificado; // Retorna o texto decodificado
+}
+
 
 // Função Principal --------------------------------------------------------------------------  
 int main(){
@@ -247,8 +273,8 @@ int main(){
   int frequencia[TAM_ASCII];
   int colunas;
   char **dicionario;
-  char *codificado;
-  unsigned char string[] = "Vamos aprender programação";
+  char *codificado, *decodificado;
+  unsigned char string[] = "Vamos aprender a programar";
 
   // Tabela de frequência
   zerarTabela(frequencia);
@@ -274,13 +300,12 @@ int main(){
   codificado = codificar(dicionario, string);
   printf("\n\tString codificada: %s\n", codificado);
 
+  // Decodificação
+  decodificado = decodificar(codificado, arvore);
+  printf("\n\tString decodificada: %s\n", decodificado);
   
   return 0;
 }
-
-
-
-
 
 
 /*
