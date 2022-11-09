@@ -261,6 +261,40 @@ char* decodificar(unsigned char string[], No *raiz){
   return decodificado; // Retorna o texto decodificado
 }
 
+// Função para compactar o arquivo
+void compactar(unsigned char string[]){
+  FILE *arq = fopen("compactado.huf", "wb");
+  int i = 0, j = 7;
+  unsigned char mascara, byte = 0;
+
+  // Transformando os caracteres em bits
+  if(arq){
+    while(string[i] != '\0'){
+      mascara = 1;
+
+      if(string[i] == '1'){
+        mascara = mascara << j; // Copiando em mascara o bit 1 na esquerda (posição 7)
+        byte = byte | mascara; // Colocando o bit 1 na posição mais à esquerda do byte através do ou bit a bit
+      }
+      j--; // j decrementa para percorrer toda a sequência de caracteres
+
+      if(j < 0){ // Sequência de 8 bits já foi percorrida
+        fwrite(&byte, sizeof(unsigned char), 1, arq); // Escrevendo um byte no arquivo
+        byte = 0; // Reinicializando o byte para continuar a sequência
+        j = 7; // Reinicializando j para percorrer os bits novamente
+      }
+      i++; // Caminhando na string
+    }
+    if(j != 7) // Ficou um byte pela metade (ex: 11110000)
+      fwrite(&byte, sizeof(unsigned char), 1, arq);
+
+    fclose(arq);  
+  }else
+    printf("Erro ao criar arquivo na compactação");
+}
+
+
+
 
 // Função Principal --------------------------------------------------------------------------  
 int main(){
