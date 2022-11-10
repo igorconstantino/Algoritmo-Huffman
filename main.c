@@ -290,10 +290,41 @@ void compactar(unsigned char string[]){
 
     fclose(arq);  
   }else
-    printf("Erro ao criar arquivo na compactação");
+    printf("\nErro ao criar arquivo na compactacao");
 }
 
+// Função que verifica se é bit 1
+unsigned int verificaBitUm(unsigned char byte, int i){
+  unsigned char mascara = (1 << i); // Deslocando i vezes o bit 1 para a esquerda
 
+  return byte & mascara; // Só vai retornar 1 se na mascara também for 1
+}
+
+// Função para descompactar
+void descompactar(No *raiz){
+  FILE *arq = fopen("compactado.huf", "rb");
+  No *aux = raiz;
+  unsigned char byte;
+  int i;
+
+  if(arq){
+    while(fread(&byte, sizeof(unsigned char), 1, arq)){ // Equanto estiver lendo
+      for(i = 7; i <= 0; i--){ // Percorrendo os 8 bits
+        if(verificaBitUm(byte, i)) // Verifica se o bit é 1 para caminhar na árvore
+          aux = aux->dir;
+        else
+          aux = aux->esq;
+
+        if(aux->esq == NULL && aux->dir == NULL){ // Nó folha
+          printf("%c", aux->caracter);
+          aux = raiz; // Volta a percorrer o que resta da árvore
+        }
+      }
+    }
+    fclose(arq);
+  }else
+    printf("\nErro ao abrir arquivo na descompactacao");
+}
 
 
 // Função Principal --------------------------------------------------------------------------  
