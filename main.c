@@ -309,7 +309,7 @@ void descompactar(No *raiz){
 
   if(arq){
     while(fread(&byte, sizeof(unsigned char), 1, arq)){ // Equanto estiver lendo
-      for(i = 7; i <= 0; i--){ // Percorrendo os 8 bits
+      for(i = 7; i >= 0; i--){ // Percorrendo os 8 bits
         if(verificaBitUm(byte, i)) // Verifica se o bit é 1 para caminhar na árvore
           aux = aux->dir;
         else
@@ -326,6 +326,43 @@ void descompactar(No *raiz){
     printf("\nErro ao abrir arquivo na descompactacao");
 }
 
+// Função que irá contar o tamanho do texto
+int contarTamanho(){
+  FILE *arq = fopen("teste.txt", "r");
+  int tam = 0;
+
+  if(arq){
+    while(fgetc(arq) != -1) // Enquanto estiver lendo algum caracter
+      tam++;
+
+    fclose(arq);  
+  }else
+    printf("\nErro ao abrir arquivo para descobrir tamanho");
+
+  return tam;  
+}
+
+// Função para ler o texto do arquivo a ser comprimido
+void lerString(unsigned char *string){
+  FILE *arq = fopen("teste.txt", "r");
+  char letra;
+  int i = 0;
+
+  if(arq){
+    while(!feof(arq)){
+      letra = fgetc(arq);
+
+      if(letra != -1){ // Verificando se estamos lendo caracteres válidos
+        string[i] = letra; // Armazenando cada caractere lido na string
+        i++;
+      }
+    }
+
+    fclose(arq);  
+  }else
+    printf("\nErro ao abrir arquivo para ler o texto");
+}
+
 
 // Função Principal --------------------------------------------------------------------------  
 int main(){
@@ -333,13 +370,22 @@ int main(){
   // Para utilizar acentuação
   setlocale(LC_ALL, "Portuguese");
 
+  //unsigned char string[] = "Vamos aprender a programar";
+  unsigned char *string;
   Lista lista;
   No *arvore;
   int frequencia[TAM_ASCII];
-  int colunas;
+  int colunas, tam;
   char **dicionario;
   char *codificado, *decodificado;
-  unsigned char string[] = "Vamos aprender a programar";
+
+  // Tamanho do arquivo texto e leitura
+  tam = contarTamanho();
+  printf("\nQuantidade: %d", tam);
+
+  string = calloc(tam + 2, sizeof(unsigned char));
+  lerString(string);
+  printf("\nTEXTO: \n%s\n", string);
 
   // Tabela de frequência
   zerarTabela(frequencia);
@@ -367,8 +413,20 @@ int main(){
 
   // Decodificação
   decodificado = decodificar(codificado, arvore);
-  printf("\n\tString decodificada: %s\n", decodificado);
+
+  // Compactação
+  compactar(codificado);
+
+  // Descompactar
+  printf("\nArquivo descompactado\n");
+  descompactar(arvore);
+  printf("\n\n");
   
+  // Liberando alguns espaços
+  free(string);
+  free(codificado);
+  free(decodificado);
+
   return 0;
 }
 
