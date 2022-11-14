@@ -1,3 +1,45 @@
+/*
+/--------------- ALGORITMO DE HUFFMAN ---------------/
+
+1 - Ler string e gerar uma tabela de frequência;
+
+  1.1 - Um vetor de inteiros do tamanho da tabela ASCII com o índice sendo o
+        valor do caractere e o valor armazenado sendo a quantidade de vezes que aparece 
+  1.2 - Inicializar o vetor com zero 
+  1.3 - Percorrer a string incrementando o valor do vetor na posição do caractere
+
+2 - Gerar a lista com nós da arvore;
+
+  2.1 - Criar o nó da árvore binária
+  2.2 - Percorrer a tabela de frequência, para cada caractere existente no
+        texto, criar seu nó e inserir na lista
+
+3 - Gerar a árvore codificadora ótima;
+
+  3.1 - Remover os nós da lista seguindo o algoritmo e obter a árvore
+        decodificadora ótima
+
+4 - Gerar dicionário;
+
+  4.1 - Matriz de string (tabela de codificação)
+  4.2 - Linhas = tamanho da tabela ASCII
+  4.3 - Colunas = altura da árvore codificadora ótima (máximo de dígitos que o
+        código pode ter) + 1 (para o \0)
+
+5 - Codificar o texto lido;
+
+  5.1 - Codificar cada caracter e ir montando a sequência de 0's e 1's
+
+6 - Decodificar o texto lido;
+
+  6.1 - Percorrer a árvore codificadora ótima de acordo com cada bit lido na
+        string
+  6.2 - Concatenar o caracter de cada nó folha atingido na string original
+
+
+/--------------- ALGORITMO DE HUFFMAN ---------------/
+*/
+
 // Inclusão de bibliotecas, constantes e structs ---------------------------------------------
 #include <stdio.h>
 #include <stdlib.h>
@@ -301,8 +343,11 @@ unsigned int verificaBitUm(unsigned char byte, int i){
 }
 
 // Função para descompactar
-void descompactar(No *raiz){
+long int descompactar(No *raiz){
   FILE *arq = fopen("compactado.huf", "rb");
+  FILE *arq2 = fopen("descompactado.txt", "a+");
+
+  long int economia;
   No *aux = raiz;
   unsigned char byte;
   int i;
@@ -316,14 +361,18 @@ void descompactar(No *raiz){
           aux = aux->esq;
 
         if(aux->esq == NULL && aux->dir == NULL){ // Nó folha
-          printf("%c", aux->caracter);
+          fprintf(arq2, "%c", aux->caracter);
           aux = raiz; // Volta a percorrer o que resta da árvore
         }
       }
     }
+    economia = ftell(arq2) - ftell(arq); // Calculando economia
     fclose(arq);
+    fclose(arq2);
   }else
     printf("\nErro ao abrir arquivo na descompactacao");
+
+  return economia;
 }
 
 // Função que irá contar o tamanho do texto
@@ -370,22 +419,20 @@ int main(){
   // Para utilizar acentuação
   setlocale(LC_ALL, "Portuguese");
 
-  //unsigned char string[] = "Vamos aprender a programar";
+  // Variáveis 
   unsigned char *string;
   Lista lista;
   No *arvore;
   int frequencia[TAM_ASCII];
-  int colunas, tam;
+  int op = 0, colunas, tam;
+  long int economia;
   char **dicionario;
-  char *codificado, *decodificado;
+  unsigned char *codificado, *decodificado;
 
   // Tamanho do arquivo texto e leitura
   tam = contarTamanho();
-  printf("\nQuantidade: %d", tam);
-
   string = calloc(tam + 2, sizeof(unsigned char));
   lerString(string);
-  printf("\nTEXTO: \n%s\n", string);
 
   // Tabela de frequência
   zerarTabela(frequencia);
@@ -394,33 +441,36 @@ int main(){
   // Lista ordenada
   inicializarLista(&lista);
   montarLista(frequencia, &lista);
-  mostrarLista(&lista);
 
   // Árvore de Huffman
   arvore = construirArvore(&lista);  
-  printf("\n\tArvore de Huffman:");
-  mostrarArvore(arvore, 0);
 
   // Dicionário
   colunas = alturaArvore(arvore) + 1;
   dicionario = alocarDicionario(colunas);
   preencherDicionario(dicionario, arvore, "", colunas);
-  mostrarDicionario(dicionario);
 
   // Codificação
   codificado = codificar(dicionario, string);
-  printf("\n\tString codificada: %s\n", codificado);
 
   // Decodificação
   decodificado = decodificar(codificado, arvore);
+  
+  do{
+    printf("\n\tDigite a opcao desejada: \n\n");
+    printf("(1) - Compactar arquivo (.huf)\n");
+    printf("(2) - Descompactar arquivo (.txt)\n");
+    printf("(3) - Fechar programa\n");
+    scanf("%d", &op);
 
-  // Compactação
-  compactar(codificado);
+    if(op == 1) // Compactar
+      compactar(codificado);
+    else if(op == 2){ // Descompactar
+      economia = descompactar(arvore);
+      printf("\nA economia foi de: %ld bytes\n", economia);
+    }  
 
-  // Descompactar
-  printf("\nArquivo descompactado\n");
-  descompactar(arvore);
-  printf("\n\n");
+  }while(op != 3);
   
   // Liberando alguns espaços
   free(string);
@@ -428,49 +478,4 @@ int main(){
   free(decodificado);
 
   return 0;
-}
-
-
-/*
-
-/--------------- ALGORITMO DE HUFFMAN ---------------/
-
-1 - Ler string e gerar uma tabela de frequência;
-
-  1.1 - Um vetor de inteiros do tamanho da tabela ASCII com o índice sendo o
-        valor do caractere e o valor armazenado sendo a quantidade de vezes que aparece 
-  1.2 - Inicializar o vetor com zero 
-  1.3 - Percorrer a string incrementando o valor do vetor na posição do caractere
-
-2 - Gerar a lista com nós da arvore;
-
-  2.1 - Criar o nó da árvore binária
-  2.2 - Percorrer a tabela de frequência, para cada caractere existente no
-        texto, criar seu nó e inserir na lista
-
-3 - Gerar a árvore codificadora ótima;
-
-  3.1 - Remover os nós da lista seguindo o algoritmo e obter a árvore
-        decodificadora ótima
-
-4 - Gerar dicionário;
-
-  4.1 - Matriz de string (tabela de codificação)
-  4.2 - Linhas = tamanho da tabela ASCII
-  4.3 - Colunas = altura da árvore codificadora ótima (máximo de dígitos que o
-        código pode ter) + 1 (para o \0)
-
-5 - Codificar o texto lido;
-
-  5.1 - Codificar cada caracter e ir montando a sequência de 0's e 1's
-
-6 - Decodificar o texto lido;
-
-  6.1 - Percorrer a árvore codificadora ótima de acordo com cada bit lido na
-        string
-  6.2 - Concatenar o caracter de cada nó folha atingido na string original
-
-
-/--------------- ALGORITMO DE HUFFMAN ---------------/
-
-*/
+} // Fim do programa -------------------------------------------------------------------------
