@@ -327,7 +327,7 @@ void compactar(unsigned char string[]){
       }
       i++; // Caminhando na string
     }
-    if(j != 7) // Ficou um byte pela metade (ex: 11110000)
+    if(j != 7) // Ficou um byte pela metade
       fwrite(&byte, sizeof(unsigned char), 1, arq);
 
     fclose(arq);  
